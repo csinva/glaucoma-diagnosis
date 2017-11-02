@@ -1,0 +1,1 @@
+- this folder contains glaucoma images (there should be 179)

@@ -1,0 +1,1 @@
+- this folder contains control images (there should be 1069)
