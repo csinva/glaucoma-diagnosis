@@ -9,6 +9,8 @@ import scipy
 from sklearn.preprocessing import LabelEncoder
 
 
+
+
 def get_data(folder):
     """
     Load the data and labels from the given folder.
