@@ -4,3 +4,5 @@ data/*/*.png
 data/*/*.PNG
 data/*/*.jpg
 .idea
+**cache*
+**.pyc*

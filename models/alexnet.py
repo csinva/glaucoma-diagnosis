@@ -2,14 +2,13 @@
 Without BN, the start learning rate should be 0.01
 (c) YANG, Wei 
 '''
-import torch.nn as nn
 
+import torch.nn as nn
 
 __all__ = ['alexnet']
 
 
 class AlexNet(nn.Module):
-
     def __init__(self, num_classes=2):
         super(AlexNet, self).__init__()
         self.features = nn.Sequential(
