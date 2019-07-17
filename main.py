@@ -1,29 +1,24 @@
-import numpy as np
-from os import listdir
-from os.path import join as oj
+from __future__ import print_function
+
 import sys
-import matplotlib.image as mpimg
+from os.path import join as oj
 
-sys.path.insert(1, oj(sys.path[0], '..'))  # insert parent path
-
+import torch
+import torch.nn as nn
+import torch.optim as optim
 # pytorch stuff
 import torch.utils.data as data
-from torchvision import transforms
-import torch.optim as optim
-from torch.autograd import Variable
-import torch.nn as nn
-import torch.nn.functional as F
-import torch
-from models import alexnet
 import torchvision.models as tv_models
+from torch.autograd import Variable
 
 # set up data
+sys.path.insert(1, oj(sys.path[0], '..'))  # insert parent path
 import data
 
 # transformations = transforms.Compose([transforms.Scale(32), transforms.Normalize(0, 1)])
 
-dset = data.Glaucoma_dset("data")
-print("data len", len(dset), "im shape", dset[0][0].shape)
+dset = data.GlaucomaDataset('data')
+print('data len', len(dset), 'im shape', dset[0][0].shape)
 net = tv_models.alexnet()  # alexnet.alexnet()
 
 train_loader = torch.utils.data.DataLoader(dset,
@@ -39,7 +34,6 @@ optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
 # train
 for epoch in range(2):  # loop over the dataset multiple times
-
     running_loss = 0.0
     for i, data in enumerate(train_loader, 0):
         # get the inputs

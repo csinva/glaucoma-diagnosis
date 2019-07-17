@@ -1,20 +1,18 @@
-import numpy as np
-from keras.models import Sequential
-from keras.layers import Dense, Dropout, Activation, Flatten
-from keras.layers import Conv2D, MaxPooling2D, Lambda
-from keras.layers import Dense
-from keras.utils import np_utils
-from keras.preprocessing.image import ImageDataGenerator
-from keras.models import model_from_json
-from sklearn.preprocessing import LabelEncoder
-from sklearn.cross_validation import train_test_split
-import cv2
-import scipy
+from __future__ import print_function
+
 import os
+
+import cv2
 # get_ipython().magic(u'matplotlib inline')
 import matplotlib.pyplot as plt
-
-
+import numpy as np
+from PIL import Image
+from keras import backend as K
+from keras.layers import Conv2D, MaxPooling2D, Lambda
+from keras.layers import Dense
+from keras.layers import Dropout, Activation, Flatten
+from keras.models import Sequential
+from sklearn.preprocessing import LabelEncoder
 
 epochs = 20
 # BASE_DIR = '../'
@@ -23,16 +21,20 @@ batch_size = 32
 
 def get_model():
     model = Sequential()
-    model.add(Lambda(lambda x: x * 1./255., input_shape=(175, 175, 3), output_shape=(175, 175, 3)))
-    model.add(Conv2D(32, (3, 3), input_shape=(175, 175, 3)))
+
+    channels = 3
+    shape = channels, 175, 175 if K.image_data_format() == 'channels_first' else 175, 175, channels
+
+    model.add(Lambda(lambda x: x * 1. / 255., input_shape=shape, output_shape=shape))
+    model.add(Conv2D(32, (channels, channels), input_shape=shape))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
 
-    model.add(Conv2D(32, (3, 3)))
+    model.add(Conv2D(32, (channels, channels)))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
 
-    model.add(Conv2D(64, (3, 3)))
+    model.add(Conv2D(64, (channels, channels)))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
 
@@ -44,23 +46,14 @@ def get_model():
     model.add(Activation('sigmoid'))
 
     model.compile(loss='binary_crossentropy',
-                optimizer='rmsprop',
-                metrics=['accuracy'])
+                  optimizer='rmsprop',
+                  metrics=['accuracy'])
 
     return model
 
 
-
-
-
-
 model = get_model()
 print(model.summary())
-
-
-
-
-
 
 
 def get_data(folder):
@@ -80,25 +73,22 @@ def get_data(folder):
                 img_file = cv2.imread(folder + img_type + '/' + image_filename)
                 if img_file is not None:
                     # Downsample the image to 120, 160, 3
-                    img_file = scipy.misc.imresize(arr=img_file, size=(175, 175, 3))
+                    img_file = np.array(Image.fromarray(img_file).resize((175, 175)).convert(3))
                     img_arr = np.asarray(img_file)
                     X.append(img_arr)
                     y.append(label)
     X = np.asarray(X)
     y = np.asarray(y)
-    return X,y
+    return X, y
 
 
-
-X_train, y_train = get_data('images/TRAIN/')
-X_test, y_test = get_data('images/TEST/')
+X_train, y_train = get_data(os.path.join('images', 'TRAIN'))
+X_test, y_test = get_data(os.path.join('images', 'TEST'))
 
 encoder = LabelEncoder()
 encoder.fit(y_train)
 y_train = encoder.transform(y_train)
 y_test = encoder.transform(y_test)
-
-
 
 model = get_model()
 
@@ -110,7 +100,6 @@ history = model.fit(
     epochs=epochs,
     shuffle=True,
     batch_size=batch_size)
-
 
 model.save_weights('binary_model.h5')
 model.save('saved_model.h5')
@@ -134,13 +123,6 @@ model.save('saved_model.h5')
 # print("Loaded model from disk")
 
 
-
-
-
-
-
-
-
 def plot_learning_curve(history):
     plt.plot(history.history['acc'])
     plt.plot(history.history['val_acc'])
@@ -148,7 +130,7 @@ def plot_learning_curve(history):
     plt.ylabel('accuracy')
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
-    plt.savefig('./accuracy_curve.png')
+    plt.savefig('accuracy_curve.png')
     plt.clf()
     # summarize history for loss
     plt.plot(history.history['loss'])
@@ -157,10 +139,10 @@ def plot_learning_curve(history):
     plt.ylabel('loss')
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
-    plt.savefig('./loss_curve.png')
+    plt.savefig('loss_curve.png')
+
 
 plot_learning_curve(history)
-
 
 # # Accuracy
 
@@ -173,8 +155,6 @@ y_pred = np.rint(model.predict(X_test))
 
 print(accuracy_score(y_test, y_pred))
 
-
-
 # # Confusion Matrix
 
 # In[14]:
@@ -183,27 +163,18 @@ from sklearn.metrics import confusion_matrix
 
 print(confusion_matrix(y_test, y_pred))
 
-
-
-
-
-
-
-
 # # Images Misclassified
 
 # In[14]:
 
 false_positive = np.intersect1d(np.where(y_pred == 1), np.where(y_test == 0))
 
-
 # In[31]:
 
 
 for i in false_positive:
-	img = X_test[false_positive[i]]
-	plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-
+    img = X_test[false_positive[i]]
+    plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
 
 # # Mononuclear Cells Classified Correctly
 
@@ -211,24 +182,20 @@ for i in false_positive:
 
 true_positive_glaucoma = np.intersect1d(np.where(y_pred == 1), np.where(y_test == 1))
 
-
 # In[32]:
 
 img = X_test[true_positive_glaucoma[0]]
 plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-
 
 # In[33]:
 
 img = X_test[true_positive_glaucoma[5]]
 plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
 
-
 # In[34]:
 
 img = X_test[true_positive_glaucoma[8]]
 plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-
 
 # # Polynuclear Cells Classified Correctly
 
@@ -236,21 +203,17 @@ plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
 
 true_positive_not_glaucoma = np.intersect1d(np.where(y_pred == 0), np.where(y_test == 0))
 
-
 # In[27]:
 
 img = X_test[true_positive_not_glaucoma[21]]
 plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-
 
 # In[29]:
 
 img = X_test[true_positive_not_glaucoma[53]]
 plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
 
-
 # In[30]:
 
 img = X_test[true_positive_not_glaucoma[16]]
 plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-

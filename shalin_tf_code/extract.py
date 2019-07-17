@@ -1,8 +1,16 @@
-import os, sys, time, subprocess, h5py, argparse, logging
+from __future__ import print_function
+
+import argparse
+import logging
+import os
+import subprocess
+import sys
+import time
+from os.path import join as oj
+
+import h5py
 import numpy as np
 import tensorflow as tf
-import sys
-from os.path import join as oj
 
 sys.path.insert(1, oj(sys.path[0], '..'))  # insert parent path
 
@@ -20,13 +28,13 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 np.random.seed(13)
 num_ims_per_clip = 16
 device = args.device  # '/cpu:0', '/gpu:0'
-ims_dir = "data/stim"
-out_file = oj(ims_dir, "features.h5")
+ims_dir = os.path.join('data', 'stim')
+out_file = oj(ims_dir, 'features.h5')
 if os.path.exists(out_file):  # delete the features if they already exist
-    subprocess.call("rm " + out_file, shell=True)
+    subprocess.call('rm ' + out_file, shell=True)
 
-with h5py.File(oj(ims_dir, "ims_small.h5")) as f:
-    ims = f["ims"]
+with h5py.File(oj(ims_dir, 'ims_small.h5')) as f:
+    ims = f['ims']
     N, H, W, C = ims.shape[0], ims.shape[1], ims.shape[2], ims.shape[3]
     print('ims.shape', ims.shape)
     from models.c3d.c3d_model import build_model
@@ -58,7 +66,7 @@ with h5py.File(oj(ims_dir, "ims_small.h5")) as f:
                     feature_dim = layer_features[l].shape
                     out.create_dataset(layer_names[l], (N - (16 - 1), layer_features[l].shape[-4],
                                                         layer_features[l].shape[-3], layer_features[l].shape[-2],
-                                                        layer_features[l].shape[-1]), dtype="float32")
+                                                        layer_features[l].shape[-1]), dtype='float32')
         with h5py.File(out_file) as out:
             for l in range(len(layer_names)):
                 # print(l, layer_names[l], N, layer_features[l].shape)

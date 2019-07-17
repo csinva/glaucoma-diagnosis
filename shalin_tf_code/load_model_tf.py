@@ -1,14 +1,11 @@
-from keras.models import load_model
-from keras.preprocessing import image
-import numpy as np
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import accuracy_score
+from __future__ import print_function
+
 import os
+
 import cv2
-import scipy
+import numpy as np
+from PIL import Image
 from sklearn.preprocessing import LabelEncoder
-
-
 
 
 def get_data(folder):
@@ -28,25 +25,21 @@ def get_data(folder):
                 img_file = cv2.imread(folder + img_type + '/' + image_filename)
                 if img_file is not None:
                     # Downsample the image to 120, 160, 3
-                    img_file = scipy.misc.imresize(arr=img_file, size=(175, 175, 3))
+                    img_file = np.array(Image.fromarray(img_file).resize((175, 175)).convert(3))
                     img_arr = np.asarray(img_file)
                     X.append(img_arr)
                     y.append(label)
     X = np.asarray(X)
     y = np.asarray(y)
-    return X,y
+    return X, y
 
 
-X_train, y_train = get_data('images/TRAIN/')
-X_test, y_test = get_data('images/TEST/')
-
+X_train, y_train = get_data(os.path.join('images', 'TRAIN'))
+X_test, y_test = get_data(os.path.join('images', 'TEST'))
 
 encoder = LabelEncoder()
 encoder.fit(y_train)
 y_test = encoder.transform(y_test)
-
-
-
 
 # # Accuracy
 
@@ -59,8 +52,6 @@ y_pred = np.rint(model.predict(X_test))
 
 print(accuracy_score(y_test, y_pred))
 
-
-
 # # Confusion Matrix
 
 # In[14]:
@@ -72,10 +63,6 @@ print(confusion_matrix(y_test, y_pred))
 # # Confusion Matrix
 
 # In[14]:
-
-
-
-
 
 
 # # dimensions of our images
